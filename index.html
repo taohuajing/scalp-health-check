@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>乐碳头皮健康自查系统</title>
+    <style>
+        :root {
+            --primary-blue: #1890ff;
+            --light-blue: #e6f7ff;
+            --dark-blue: #0050b3;
+            --text-dark: #262626;
+            --text-light: #8c8c8c;
+            --border-color: #d9d9d9;
+            --success-green: #52c41a;
+            --warning-orange: #faad14;
+            --alert-red: #ff4d4f;
+            --white: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #fafafa;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            padding: 30px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        h1 {
+            color: var(--primary-blue);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .section.active {
+            display: block;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .question-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option-label:hover {
+            border-color: var(--primary-blue);
+            background-color: var(--light-blue);
+        }
+        .option-label.selected {
+            border-color: var(--primary-blue);
+            background-color: var(--light-blue);
+            font-weight: 500;
+        }
+        .option-label input {
+            margin-right: 12px;
+            accent-color: var(--primary-blue);
+        }
+        .tip {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 3px solid var(--primary-blue);
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        #prevBtn {
+            background-color: var(--white);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+        #prevBtn:hover:not(:disabled) {
+            background-color: #f5f5f5;
+        }
+        #nextBtn, #submitBtn {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        #nextBtn:hover, #submitBtn:hover {
+            background-color: var(--dark-blue);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            height: 6px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-blue);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .result-section {
+            text-align: center;
+        }
+        .result-card {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: left;
+            background-color: var(--white);
+        }
+        .dimension-score {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .score-0-2 { background-color: #f6ffed; border-left: 5px solid var(--success-green); }
+        .score-3-4 { background-color: #fffbe6; border-left: 5px solid var(--warning-orange); }
+        .score-5-6 { background-color: #fff1f0; border-left: 5px solid var(--alert-red); }
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+        .action-title {
+            color: var(--primary-blue);
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        #resultTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        #resultTable th, #resultTable td {
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            text-align: left;
+        }
+        #resultTable th {
+            background-color: var(--light-blue);
+            color: var(--dark-blue);
+        }
+        .print-btn {
+            background-color: var(--white);
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+            margin: 10px;
+        }
+        .print-btn:hover {
+            background-color: var(--light-blue);
+        }
+        .solution-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        .solution-section h4 {
+            color: var(--dark-blue);
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+        .solution-section h4::before {
+            content: "•";
+            color: var(--primary-blue);
+            font-size: 24px;
+            margin-right: 8px;
+        }
+        .tip-note {
+            background: #fff7e6;
+            border: 1px dashed #ffc53d;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #613400;
+            margin: 10px 0;
+        }
+        .action-box {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f4ff 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            border: 1px solid #91caff;
+        }
+        .product-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .product-list li {
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: white;
+        }
+        .product-name {
+            color: var(--dark-blue);
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .product-spec {
+            display: inline-block;
+            background-color: var(--light-blue);
+            color: var(--primary-blue);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-right: 10px;
+            margin-bottom: 8px;
+        }
+        .product-price {
+            display: inline-block;
+            background-color: #f6ffed;
+            color: var(--success-green);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .product-desc {
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .product-use {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            .option-label {
+                padding: 10px;
+            }
+        }
+        @media print {
+            .no-print { display: none; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>乐碳头皮健康自查系统</h1>
+            <p class="subtitle">完成专业评估，获取个性化头皮护理方案</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </header>
+
+        <section id="section0" class="section active">
+            <h2>第一步：基本信息</h2>
+            <div class="question">
+                <div class="question-title">1. 您的称呼是？</div>
+                <input type="text" id="userName" placeholder="例如：张先生/李女士" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem;">
+            </div>
+            <div class="question">
+                <div class="question-title">2. 您的年龄段是？</div>
+                <div class="options">
+                    <label class="option-label"><input type="radio" name="age" value="20岁以下"> 20岁以下</label>
+                    <label class="option-label"><input type="radio" name="age" value="21-30岁"> 21-30岁</label>
+                    <label class="option-label"><input type="radio" name="age" value="31-40岁"> 31-40岁</label>
+                    <label class="option-label"><input type="radio" name="age" value="41-50岁"> 41-50岁</label>
+                    <label class="option-label"><input type="radio" name="age" value="50岁以上"> 50岁以上</label>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button disabled id="prevBtn">上一步</button>
+                <button id="nextBtn">下一步</button>
+            </div>
+        </section>
+
+        <section id="section1" class="section">
+            <h2>第二步：核心问题排查</h2>
+            <p style="color: var(--text-light); margin-bottom: 25px;">请根据您最近1-2周的真实感受选择。</p>
+            <div id="coreQuestionsContainer">
+                <!-- 问题将由JS动态生成 -->
+            </div>
+            <div class="nav-buttons">
+                <button id="prevBtn1">上一步</button>
+                <button id="nextBtn1">下一步</button>
+            </div>
+        </section>
+
+        <section id="section2" class="section">
+            <h2>第三步：生活习惯与诱因</h2>
+            <div class="question">
+                <div class="question-title">1. 您的洗护习惯是？</div>
+                <div>
+                    <p style="margin-bottom: 8px;">洗发频率：</p>
+                    <div class="options">
+                        <label class="option-label"><input type="radio" name="washFreq" value="每天"> 每天</label>
+                        <label class="option-label"><input type="radio" name="washFreq" value="隔天"> 隔天</label>
+                        <label class="option-label"><input type="radio" name="washFreq" value="2-3天一次"> 2-3天一次</label>
+                        <label class="option-label"><input type="radio" name="washFreq" value="超过3天"> 超过3天</label>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <p style="margin-bottom: 8px;">护理方式（可多选）：</p>
+                    <div class="options">
+                        <label class="option-label"><input type="checkbox" name="habit" value="用指甲抓挠头皮"> 习惯用指甲抓挠头皮</label>
+                        <label class="option-label"><input type="checkbox" name="habit" value="用很热的水洗头"> 喜欢用很热的水洗头</label>
+                        <label class="option-label"><input type="checkbox" name="habit" value="护发素涂到头皮"> 会把护发素涂到头皮上</label>
+                        <label class="option-label"><input type="checkbox" name="habit" value="无特殊习惯"> 无特殊习惯</label>
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="question-title">2. 您的饮食与作息？</div>
+                <div>
+                    <p style="margin-bottom: 8px;">饮食偏好：</p>
+                    <div class="options">
+                        <label class="option-label"><input type="radio" name="diet" value="偏爱油腻辛辣高糖食物"> 偏爱油腻、辛辣、高糖食物</label>
+                        <label class="option-label"><input type="radio" name="diet" value="饮食比较均衡"> 饮食比较均衡</label>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <p style="margin-bottom: 8px;">压力与睡眠：</p>
+                    <div class="options">
+                        <label class="option-label"><input type="radio" name="stress" value="长期压力大经常熬夜"> 长期压力大，经常熬夜或失眠</label>
+                        <label class="option-label"><input type="radio" name="stress" value="偶尔压力大睡眠不规律"> 偶尔压力大，睡眠不太规律</label>
+                        <label class="option-label"><input type="radio" name="stress" value="压力较小作息规律"> 压力较小，作息规律</label>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button id="prevBtn2">上一步</button>
+                <button id="submitBtn">生成我的健康档案</button>
+            </div>
+        </section>
+
+        <section id="section3" class="section result-section">
+            <h2>您的个人头皮健康档案</h2>
+            <p>以下是根据您的回答生成的评估结果，您可以保存或打印此页面，与乐碳的专业顾问进行深入探讨。</p>
+
+            <div class="result-card">
+                <h3>基本信息</h3>
+                <p><strong>称呼：</strong> <span id="resultName">-</span></p>
+                <p><strong>评估日期：</strong> <span id="resultDate">-</span></p>
+                <p><strong>年龄段：</strong> <span id="resultAge">-</span></p>
+            </div>
+
+            <div class="result-card">
+                <h3>核心维度评估结果</h3>
+                <p>每个维度得分解读：<span style="color:var(--success-green);">0-2分（良好）</span>， <span style="color:var(--warning-orange);">3-4分（警惕）</span>， <span style="color:var(--alert-red);">5-6分（建议行动）</span></p>
+                <div id="scoreDisplay">
+                    <!-- 分数卡片将动态生成 -->
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h3>生活习惯摘要</h3>
+                <p id="resultHabits">-</p>
+            </div>
+
+            <div class="result-card">
+                <h3>详细结果与行动建议表</h3>
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th>评估维度</th>
+                            <th>您的得分</th>
+                            <th>等级</th>
+                            <th>具体行动建议</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTableBody">
+                        <!-- 表格内容将动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="result-card">
+                <h3>📋 您的个性化产品方案参考</h3>
+                <p>基于您的评估结果，我们为您梳理了以下搭配建议。请携此档案咨询乐碳专业顾问，获取定制方案。</p>
+                
+                <div class="solution-section">
+                    <h4>专业护理建议（店内仪器使用）</h4>
+                    <div class="tip-note">
+                        【关键知识】1毫升-1.2毫升精准剂量的安瓶产品，需配合店内专业仪器及"8分钟"TDA促渗技术使用，见效更快，针对性强。
+                    </div>
+                    <ul class="product-list" id="professionalSolution">
+                        <!-- 专业产品推荐将动态生成 -->
+                    </ul>
+                </div>
+                
+                <div class="solution-section">
+                    <h4>居家养护方案（家用日常护理）</h4>
+                    <p>作为专业护理的补充或日常维护，您可考虑以下家用产品：</p>
+                    <ul class="product-list" id="homecareSolution">
+                        <!-- 家用产品推荐将动态生成 -->
+                    </ul>
+                </div>
+                
+                <div class="action-box">
+                    <p><strong>💡 下一步行动：</strong>此方案仅为初步分析。乐碳顾问将根据您的档案，为您精确匹配产品、规划使用频率与疗程，并解答关于"养黑方程式"等效果的疑问。</p>
+                </div>
+            </div>
+
+            <div class="nav-buttons no-print">
+                <button class="print-btn" onclick="window.print()">打印健康档案</button>
+                <button id="restartBtn">重新开始自查</button>
+            </div>
+        </section>
+
+        <footer style="margin-top: 40px; text-align: center; color: var(--text-light); font-size: 0.9rem; padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <p>免责声明：本自查结果基于您的自主填报，仅供个人健康管理参考，不能替代专业医疗诊断。如有严重或持续症状，请务必咨询皮肤科医生。</p>
+        </footer>
+    </div>
+
+    <script>
+        // 核心问题数据
+        const coreQuestions = [
+            {
+                id: 'oil',
+                title: '出油状况',
+                options: [
+                    { text: '洗完头不到1天，头发就看起来油腻腻的。', score: 3 },
+                    { text: '能坚持1-2天，但第二天下午就有点塌了。', score: 2 },
+                    { text: '2-3天内都能保持比较干爽的状态。', score: 1 },
+                    { text: '3天以上依然清爽。', score: 0 }
+                ],
+                tip: '小贴士：如果伴随头皮屑，可能是头皮过干哦'
+            },
+            {
+                id: 'sensitive',
+                title: '敏感/不适状况',
+                options: [
+                    { text: '经常感觉头皮痒、紧绷，甚至影响日常生活。', score: 3 },
+                    { text: '偶尔会痒，尤其在换季、压力大或熬夜后。', score: 2 },
+                    { text: '很少有不舒服的感觉。', score: 1 },
+                    { text: '几乎从未感到不适。', score: 0 }
+                ],
+                tip: ''
+            },
+            {
+                id: 'dandruff',
+                title: '头屑状况',
+                options: [
+                    { text: '有大块、油腻的皮屑，容易粘在头皮和头发上。', score: 3 },
